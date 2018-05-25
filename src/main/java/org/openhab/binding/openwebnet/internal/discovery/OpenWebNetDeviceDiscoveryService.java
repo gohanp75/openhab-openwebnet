@@ -29,7 +29,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The {@link OpenWebNetDeviceDiscoveryService} is responsible for discovering OpenWebNet devices.
+ * The {@link OpenWebNetDeviceDiscoveryService} is responsible for discovering OpenWebNet devices connected to a
+ * bridge/gateway
  *
  * @author Massimo Valla - Initial contribution
  */
@@ -101,6 +102,16 @@ public class OpenWebNetDeviceDiscoveryService extends AbstractDiscoveryService
                 case SCS_DIMMER_SWITCH: {
                     thingTypeUID = OpenWebNetBindingConstants.THING_TYPE_BUS_DIMMER;
                     thingLabel = OpenWebNetBindingConstants.THING_LABEL_BUS_DIMMER;
+                    break;
+                }
+                case SCS_SHUTTER_CONTROL: {
+                    thingTypeUID = OpenWebNetBindingConstants.THING_TYPE_BUS_AUTOMATION;
+                    thingLabel = OpenWebNetBindingConstants.THING_LABEL_BUS_AUTOMATION;
+                    break;
+                }
+                case ZIGBEE_SHUTTER_CONTROL: {
+                    thingTypeUID = OpenWebNetBindingConstants.THING_TYPE_AUTOMATION;
+                    thingLabel = OpenWebNetBindingConstants.THING_LABEL_AUTOMATION;
                     break;
                 }
                 default:

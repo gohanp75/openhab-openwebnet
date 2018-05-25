@@ -6,18 +6,19 @@
 
     <!-- OpenWebNet BUS gateway -->
     <bridge-type id="bus_gateway">
-        <label>OpenWebNet BUS/SCS Gateway</label>
-        <description><![CDATA[This thing allows to connect to a OpenWebNet BUS gateway (models: MH200N, F453, F454) using the OpenWebNet protocol]]></description>
+        <label>OpenWebNet BUS Gateway</label>
+        <description><![CDATA[This thing allows to connect to a OpenWebNet BUS/SCS gateway (models: F454, MyHOMEServer1, MH200N, F453, etc.) using the OpenWebNet protocol]]></description>
 
         <properties>
             <property name="vendor">BTicino</property>
-            <property name="model">MH200N, F453, F454, etc.</property> 
+            <property name="model">Unknown</property> 
             <property name="firmwareVersion"></property>
         </properties>
                 
         <config-description>
  
             <parameter name="host" type="text">
+                <context>network-address</context>
                 <label>Host</label>
                 <description>OpenWebNet gateway IP address / hostname (example: 192.168.1.35)</description>
                 <required>true</required>
@@ -30,6 +31,7 @@
             </parameter>
             
             <parameter name="passwd" type="text">
+                <context>password-create</context>
                 <label>Password</label>
                 <description>OpenWebNet gateway password (default: 12345)</description>
                 <required>false</required>

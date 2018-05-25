@@ -11,7 +11,7 @@
 			<bridge-type-ref id="dongle" />
 		</supported-bridge-type-refs>
 
-		<label>OpenWebNet ZigBee On/Off Switch</label>
+		<label>OpenWebNet ZigBee Switch</label>
 		<description>A OpenWebNet ZigBee switch (actuator) for the control of 1 load/light. BTicino models: 4591/3684/etc.</description>
         
         <channels>

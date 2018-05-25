@@ -21,8 +21,9 @@ import org.eclipse.smarthome.core.thing.ThingTypeUID;
 import org.eclipse.smarthome.core.thing.ThingUID;
 import org.eclipse.smarthome.core.thing.binding.BaseThingHandlerFactory;
 import org.eclipse.smarthome.core.thing.binding.ThingHandler;
+import org.openhab.binding.openwebnet.handler.OpenWebNetAutomationHandler;
 import org.openhab.binding.openwebnet.handler.OpenWebNetBridgeHandler;
-import org.openhab.binding.openwebnet.handler.OpenWebNetDeviceHandler;
+import org.openhab.binding.openwebnet.handler.OpenWebNetLightingHandler;
 import org.openhab.binding.openwebnet.internal.discovery.OpenWebNetDeviceDiscoveryService;
 import org.osgi.framework.ServiceRegistration;
 import org.slf4j.Logger;
@@ -53,9 +54,12 @@ public class OpenWebNetHandlerFactory extends BaseThingHandlerFactory {
             OpenWebNetBridgeHandler handler = new OpenWebNetBridgeHandler((Bridge) thing);
             registerDiscoveryService(handler);
             return handler;
-        } else if (OpenWebNetDeviceHandler.SUPPORTED_THING_TYPES.contains(thing.getThingTypeUID())) {
-            logger.debug("==OWN:HandlerFactory== creating NEW Device Handler");
-            return new OpenWebNetDeviceHandler(thing);
+        } else if (OpenWebNetLightingHandler.SUPPORTED_THING_TYPES.contains(thing.getThingTypeUID())) {
+            logger.debug("==OWN:HandlerFactory== creating NEW LIGHTING Handler");
+            return new OpenWebNetLightingHandler(thing);
+        } else if (OpenWebNetAutomationHandler.SUPPORTED_THING_TYPES.contains(thing.getThingTypeUID())) {
+            logger.debug("==OWN:HandlerFactory== creating NEW AUTOMATION Handler");
+            return new OpenWebNetAutomationHandler(thing);
         }
         return null;
     }

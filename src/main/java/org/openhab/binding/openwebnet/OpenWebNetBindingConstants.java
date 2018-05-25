@@ -25,41 +25,54 @@ public class OpenWebNetBindingConstants {
 
     private static final String BINDING_ID = "openwebnet";
 
-    public static final int DEVICE_STATE_REQ_TIMEOUT = 5; // seconds
+    public static final int THING_STATE_REQ_TIMEOUT = 5; // seconds
 
-    // List of all Thing Type UIDs
+    // #LIST OF Thing Type UIDs
     // bridges
     public static final ThingTypeUID THING_TYPE_DONGLE = new ThingTypeUID(BINDING_ID, "dongle");
-    public static final String THING_LABEL_DONGLE = "OpenWebNet ZigBee USB Dongle";
+    public static final String THING_LABEL_DONGLE = "ZigBee USB Dongle";
     public static final ThingTypeUID THING_TYPE_BUS_GATEWAY = new ThingTypeUID(BINDING_ID, "bus_gateway");
-    public static final String THING_LABEL_BUS_GATEWAY = "OpenWebNet BUS/SCS Gateway";
+    public static final String THING_LABEL_BUS_GATEWAY = "BUS Gateway";
     // generic (unknown) device
     public static final ThingTypeUID THING_TYPE_DEVICE = new ThingTypeUID(BINDING_ID, "device");
-    public static final String THING_LABEL_DEVICE = "OpenWebNet GENERIC Device";
+    public static final String THING_LABEL_DEVICE = "GENERIC Device";
     // other thing types
     // BUS
     public static final ThingTypeUID THING_TYPE_BUS_ON_OFF_SWITCH = new ThingTypeUID(BINDING_ID, "bus_on_off_switch");
-    public static final String THING_LABEL_BUS_ON_OFF_SWITCH = "OpenWebNet BUS/SCS On/Off Switch";
+    public static final String THING_LABEL_BUS_ON_OFF_SWITCH = "BUS Switch";
     public static final ThingTypeUID THING_TYPE_BUS_DIMMER = new ThingTypeUID(BINDING_ID, "bus_dimmer");
-    public static final String THING_LABEL_BUS_DIMMER = "OpenWebNet BUS/SCS Dimmer";
+    public static final String THING_LABEL_BUS_DIMMER = "BUS Dimmer";
+    public static final ThingTypeUID THING_TYPE_BUS_AUTOMATION = new ThingTypeUID(BINDING_ID, "bus_automation");
+    public static final String THING_LABEL_BUS_AUTOMATION = "BUS Automation";
     // ZIGBEE
     public static final ThingTypeUID THING_TYPE_ON_OFF_SWITCH = new ThingTypeUID(BINDING_ID, "on_off_switch");
-    public static final String THING_LABEL_ON_OFF_SWITCH = "OpenWebNet ZigBee On/Off Switch";
+    public static final String THING_LABEL_ON_OFF_SWITCH = "ZigBee Switch";
     public static final ThingTypeUID THING_TYPE_ON_OFF_SWITCH_2UNITS = new ThingTypeUID(BINDING_ID, "on_off_switch2u");
-    public static final String THING_LABEL_ON_OFF_SWITCH_2UNITS = "OpenWebNet ZigBee 2-units On/Off Switch";
+    public static final String THING_LABEL_ON_OFF_SWITCH_2UNITS = "ZigBee 2-units Switch";
     public static final ThingTypeUID THING_TYPE_DIMMER = new ThingTypeUID(BINDING_ID, "dimmer");
-    public static final String THING_LABEL_DIMMER = "OpenWebNet ZigBee Dimmer";
+    public static final String THING_LABEL_DIMMER = "ZigBee Dimmer";
     public static final ThingTypeUID THING_TYPE_AUTOMATION = new ThingTypeUID(BINDING_ID, "automation");
-    public static final String THING_LABEL_AUTOMATION = "OpenWebNet ZigBee Automation";
+    public static final String THING_LABEL_AUTOMATION = "ZigBee Automation";
+    // TODO transform these constants in enum+hashmaps
 
-    // supported things
-    public final static Set<ThingTypeUID> DEVICE_SUPPORTED_THING_TYPES = Sets.newHashSet(THING_TYPE_ON_OFF_SWITCH,
-            THING_TYPE_ON_OFF_SWITCH_2UNITS, THING_TYPE_DIMMER, THING_TYPE_DEVICE, THING_TYPE_BUS_ON_OFF_SWITCH,
-            THING_TYPE_BUS_DIMMER);
-    public final static Set<ThingTypeUID> BRIDGE_SUPPORTED_THING_TYPES = Sets.newHashSet(THING_TYPE_DONGLE,
+    // #SUPPORTED THINGS SETS
+    // ## Lighting
+    public static final Set<ThingTypeUID> LIGHTING_SUPPORTED_THING_TYPES = Sets.newHashSet(THING_TYPE_ON_OFF_SWITCH,
+            THING_TYPE_ON_OFF_SWITCH_2UNITS, THING_TYPE_DIMMER, THING_TYPE_BUS_ON_OFF_SWITCH, THING_TYPE_BUS_DIMMER);
+
+    // ## Automation
+    public static final Set<ThingTypeUID> AUTOMATION_SUPPORTED_THING_TYPES = Sets.newHashSet(THING_TYPE_AUTOMATION,
+            THING_TYPE_BUS_AUTOMATION);
+
+    // ## Groups
+    public static final Set<ThingTypeUID> DEVICE_SUPPORTED_THING_TYPES = Sets.union(
+            Sets.union(LIGHTING_SUPPORTED_THING_TYPES, AUTOMATION_SUPPORTED_THING_TYPES),
+            Sets.newHashSet(THING_TYPE_DEVICE));
+
+    public static final Set<ThingTypeUID> BRIDGE_SUPPORTED_THING_TYPES = Sets.newHashSet(THING_TYPE_DONGLE,
             THING_TYPE_BUS_GATEWAY);
 
-    public final static Set<ThingTypeUID> ALL_SUPPORTED_THING_TYPES = Sets.union(DEVICE_SUPPORTED_THING_TYPES,
+    public static final Set<ThingTypeUID> ALL_SUPPORTED_THING_TYPES = Sets.union(DEVICE_SUPPORTED_THING_TYPES,
             BRIDGE_SUPPORTED_THING_TYPES);
 
     // List of all Channel ids
@@ -70,6 +83,8 @@ public class OpenWebNetBindingConstants {
     public static final String CHANNEL_SHUTTER = "shutter";
 
     // config properties
+    public static final String CONFIG_PROPERTY_SHUTTER_RUN = "shutterRun";
+
     public static final String CONFIG_PROPERTY_SERIAL_PORT = "serialPort";
 
     public static final String CONFIG_PROPERTY_WHERE = "where";
@@ -78,5 +93,6 @@ public class OpenWebNetBindingConstants {
     public static final String CONFIG_PROPERTY_PASSWD = "passwd";
 
     public static final String CONFIG_PROPERTY_FIRMWARE = "firmwareVersion";
+    public static final String CONFIG_PROPERTY_MODEL = "model";
 
 }
