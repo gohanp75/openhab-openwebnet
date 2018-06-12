@@ -1,4 +1,3 @@
-
 # OpenWebNet (BTicino/Legrand) Binding
 
 This new binding integrates BTicino / Legrand MyHOME(r) BUS & ZigBee Radio devices using the **[OpenWebNet](https://en.wikipedia.org/wiki/OpenWebNet) protocol**.
@@ -12,7 +11,14 @@ Support for both numeric (`12345`) and alpha-numeric (`abcde` - HMAC authenticat
 
 In order for this biding to work, an OpenWebNet gateway is needed in your home system to talk to devices.
 Currently these gateways are supported by the binding:
-- **IP gateways** or scenario programmers, such as BTicino [F454](http://www.homesystems-legrandgroup.com/BtHomeSystems/productDetail.action?productId=006), [MyHOMEServer1](http://www.bticino.com/products-catalogue/myhome_up-simple-home-automation-system/), [MH200N](http://www.homesystems-legrandgroup.com/BtHomeSystems/productDetail.action?lang=EN&productId=016), [MH202](http://www.homesystems-legrandgroup.com/BtHomeSystems/productDetail.action?productId=059), [F453](http://www.homesystems-legrandgroup.com/BtHomeSystems/productDetail.action?productId=027),  etc.
+
+- **IP gateways** or scenario programmers, such as BTicino 
+[F454](http://www.homesystems-legrandgroup.com/BtHomeSystems/productDetail.action?productId=006), 
+[MyHOMEServer1](http://www.bticino.com/products-catalogue/myhome_up-simple-home-automation-system/), 
+[MH202](http://www.homesystems-legrandgroup.com/BtHomeSystems/productDetail.action?productId=059), 
+[F455](http://www.homesystems-legrandgroup.com/BtHomeSystems/productDetail.action?productId=051),
+[MH200N](http://www.homesystems-legrandgroup.com/BtHomeSystems/productDetail.action?productId=016), 
+[F453](http://www.homesystems-legrandgroup.com/BtHomeSystems/productDetail.action?productId=027),  etc.
 - **ZigBee USB gateways**, using USB/serial ports such as [BTicino 3578](http://www.catalogo.bticino.it/BTI-3578-EN) and [Legrand 088328](https://www.legrand.fr/pro/catalogue/35115-interface-openradio/interface-open-webnet-et-radio-pour-pilotage-dune-installation-myhome-play)
 
 ## Supported Things
@@ -22,7 +28,7 @@ The following Things and OpenWebNet `WHOs` are supported:
 
 | Category   | WHO   | Thing Type IDs                    | Discovery?          | Feedback from BUS?          | Description                                                                             | Status           |
 | ---------- | :---: | :-------------------------------: | :----------------: | :----------------: | --------------------------------------------------------------------------------------- | ---------------- |
-| Gateway    | `13`  | `bus_gateway`                     | *work in progress*                | n/a  | Any IP gateway supporting OpenWebNet protocol should work (e.g. F454/MyHOMEServer1/MH200N/MH202) | Successfully tested: F454, MyHOMEServer1, MH202  |
+| Gateway    | `13`  | `bus_gateway`                     | *work in progress*                | n/a  | Any IP gateway supporting OpenWebNet protocol should work (e.g. F454/MyHOMEServer1/MH202/F455/MH200N,...) | Successfully tested: F454, MyHOMEServer1, MH202, F455  |
 | Lightning| `1`   | `bus_on_off_switch`, `bus_dimmer` | Yes                | Yes                | BUS switches and dimmers                                                                 | Successfully tested: F411/2, F411/4, F411U2  |
 | Automation | `2`   | `bus_automation`                | Yes | Yes                  | BUS shutters, with position feedback and auto-calibration via a *UP >> DOWN >> Position%* cycle                                                                                       | Successfully tested: LN4672M2  |
 | Temperature Control| `4`   | *work in progress*                | - | -| -                                                                                       | -  |
@@ -35,11 +41,35 @@ The following Things and OpenWebNet `WHOs` are supported:
 | Lightning| `1`   | `dimmer`, `on_off_switch`, `on_off_switch2u` | Yes                | Yes        | ZigBee dimmers, switches and 2-unit switches                | Tested: BTI-4591, BTI-3584, BTI-4585 |
 | Automation | `2`   | `automation`                           | Yes | Yes          | ZigBee shutters, with position feedback and auto-calibration via a *UP >> DOWN >> Position%* cycle                                                           | *To be tested*    |
 | Temperature Control| `4`   | *work in progress*                | - | -| -                                                                                       | -  |
+## Installation
 
+Since it's still in development stage and not part of the official distribution, to install the binding copy the jar file to your openHAB2 addons folder, on Linux or RaspberryPi is under: 
+
+`/usr/share/openhab2/addons/`
+
+Also, from **openHAB 2.3.0** and afterwards the serial feature dependency must be activated manually from Karaf console:
+
+1. go to [Karaf console](https://www.openhab.org/docs/administration/console.html)
+1. Type `feature:install openhab-transport-serial`
+
+The binding should now be installed: check in *PaperUI > Configuration > Bindings*.
+
+### Upgrade from previous release
+
+The previous version of the binding must be uninstalled using Karaf console (is not enough update the binding jar file).
+It is suggested also to remove BTicino Things before uninstalling the old binding, and  discover/configure them again after binding has been updated.
+
+from Karaf console:
+
+1. `bundle:list` to list all bundles and take note of the bundle ID for OpenWebNet Binding
+1. `bundle:uninstall <ID>` to remove previous version of the binding
+1. copy the new binding jar file to `addons/` folder
+
+The new version of the binding should now be installed.
 
 ## Discovery
 
-Discovery is supported using PaperUI by activating the discovery ("+") button form Inbox.
+Things discovery is supported using PaperUI by activating the discovery ("+") button form Inbox.
 
 ### BUS/SCS Discovery
 
@@ -52,9 +82,11 @@ Discovery is supported using PaperUI by activating the discovery ("+") button fo
 
 - The USB dongle must be inserted in one of the USB ports of the openHAB computer before discovery is started
 - ***IMPORTANT NOTE:*** As for the OH serial binding, on Linux the `openhab` user must be member of the `dialout` group, to be able to use USB/serial port:
+
     ```
     $ sudo usermod -a -G dialout openhab
     ```
+
     + The user will need to logout and login to see the new group added. If you added your user to this group and still cannot get permission, reboot Linux to ensure the new group permission is attached to the `openhab` user.
 - Once the gateway is discovered and added, a second discovery request from Inbox will discover devices. Because of the ZigBee radio network, discovery will take ~40-60 sec. Be patient!
 - Radio devices must be part of the same ZigBee network of the USB dongle to discover them. Please refer to [this guide by BTicino](http://www.bticino.com/products-catalogue/management-of-connected-lights-and-shutters/#installation) to setup a ZigBee network which includes the USB dongle
@@ -70,7 +102,7 @@ To configure the gateway: go to Inbox > "+" > OpenWebNet > click `ADD MANUALLY` 
 - `host` : IP address / hostname of the BUS/SCS gateway (*mandatory*). Example: `192.168.1.35`
 - `port` : port (*optional*, default: `20000`)
 - `passwd` : gateway password (*optional*). Example: `abcde`
-   + if the BUS/SCS gateway is configured to accept connections from the openHAB computer IP address, no password should be required
+   - if the BUS/SCS gateway is configured to accept connections from the openHAB computer IP address, no password should be required
 
 #### Example
 
@@ -78,7 +110,7 @@ To configure the gateway: go to Inbox > "+" > OpenWebNet > click `ADD MANUALLY` 
 Bridge openwebnet:bus_gateway:myBridge1 [ host="192.168.1.35", passwd="abcde" ]
 ```
 
-***HELP NEEDED!!!***
+**HELP NEEDED!!!**
 Start a gateway discovery, and then send your (DEBUG-level) log file to the openHAB Community OpenWebNet thread to see if UPnP discovery is supported by your BTicino IP gateway.
 
 
@@ -92,9 +124,9 @@ For all OpenWebNet devices it must be configured:
 
 - the associated gateway (`Bridge Selection` menu)
 - the `where` config parameter (`OpenWebNet Device Address`):
-  + example for BUS/SCS: Point to Point `A=2 PL=4` --> `where="24"`
-  + example for BUS/SCS: Point to Point `A=6 PL=4` on local bus --> `where="64#4#01"`
-  + example for ZigBee/Radio: use decimal format address without the UNIT part and network: ZigBee `WHERE=414122201#9` --> `where="4141222"`
+  - example for BUS/SCS: Point to Point `A=2 PL=4` --> `where="24"`
+  - example for BUS/SCS: Point to Point `A=6 PL=4` on local bus --> `where="64#4#01"`
+  - example for ZigBee/Radio: use decimal format address without the UNIT part and network: ZigBee `WHERE=414122201#9` --> `where="4141222"`
 
 ## Channels
 
@@ -117,6 +149,7 @@ Bridge openwebnet:bus_gateway:mybridge1 [ host="192.168.1.35", passwd="abcde" ] 
       bus_automation      myshutter  [ where="53", shutterRun="12000"]
 }
 ``` 
+
 ```
 <TODO----- ZigBee Dongle>
 Bridge openwebnet:dongle:mydongle2  [serialPort="kkkkkkk"] {
@@ -151,3 +184,25 @@ Rollershutter BUS_Shutter  { channel="openwebnet:bus_automation:mybridge1:myshut
   - monitoring events from BUS
 
   The lib also uses few classes from the openHAB 1.x BTicino binding for socket handling and priority queues.
+
+## Changelog
+
+**v2.4.0-b6** *NOT YET RELEASED*
+
+- **[NEW]** Initial support for `WHO=4` Thermoregulation on BUS. In this version only Temperature sensors are supported
+- **[FIX #7]** added support for inverted UP/DOWN automation commands for older USB ZigBee dongles
+- **[BUG]** some switches were wrongly discovered as dimmers (now use only commands for device discovery)
+- **[FIX]** added support for SCS/ZIGBEE_SHUTTER_SWITCH (515/513) device types
+- **[FIX]** added support for F455 gateway using `*99*0##` command session
+- updated to openHAB 2.4.0 dev branch
+
+**v2.3.0-b5**
+
+- **[BUG #1]** state monitoring from BUS (feedback) is no longer stopped if unsupported messages are received from BUS
+- **[FIX]** automatic reconnect to BUS when connection is lost
+- **[NEW]** support for Gateways with string passwords (HMAC authentication), like MyHOMEServer1 
+- **[NEW]** support for `WHO=2` Automation (shutters), both on BUS and ZigBee, with position feedback and  goto Percent. It requires setting the shutter run-time in the thing configuration. Experimental auto-calibration of the run-time is also supported!
+
+**v2.3.0-b4**
+
+- first public release
