@@ -10,7 +10,7 @@
 			<bridge-type-ref id="dongle" />
 		</supported-bridge-type-refs>
 		
-		<label>OpenWebNet ZigBee Automation</label>
+		<label>ZigBee Automation</label>
 		<description>A OpenWebNet ZigBee automation device to control roller shutters, blinds, etc. BTicino models: xxx/yyyy/etc.</description>
 		
 		<channels>
@@ -25,15 +25,15 @@
 		
 		<config-description>
 			<parameter name="shutterRun" type="text">
-                <label>Shutter Run</label>
-                <description>Time (in ms) to go from max position (e.g. CLOSED) to the other position (e.g. OPEN). Example: 12000 (=12sec).
-                Use AUTO (default) to calibrate the shutter automatically (UP->DOWN->Position%) the first time a Position command (%) is sent.</description>
-                <required>true</required>
-                <default>AUTO</default>
-            </parameter>
-            <parameter name="where" type="text">
+				<label>Shutter Run</label>
+				<description>Time (in ms) to go from max position (e.g. CLOSED) to the other position (e.g. OPEN). Example: 12000 (=12sec).
+				Use AUTO (default) to calibrate the shutter automatically (UP->DOWN->Position%) the first time a Position command (%) is sent.</description>
+				<required>true</required>
+				<default>AUTO</default>
+			</parameter>
+			<parameter name="where" type="text">
 				<label>OpenWebNet Device Address</label>
-                <description>It identifies one ZigBee device. Use decimal format address without the UNIT part and network: ZigBee WHERE=414122201#9 -> OpenWebNet Device Address = 4141222</description>
+				<description>It identifies one ZigBee device. Use decimal format address without the UNIT part and network: ZigBee WHERE=414122201#9 -> OpenWebNet Device Address = 4141222</description>
 				<required>true</required>
 			</parameter>
 		</config-description>

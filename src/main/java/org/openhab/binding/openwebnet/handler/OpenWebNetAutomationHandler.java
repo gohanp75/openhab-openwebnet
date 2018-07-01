@@ -231,7 +231,7 @@ public class OpenWebNetAutomationHandler extends OpenWebNetThingHandler {
                         percent);
             }
         } else {
-            logger.warn("==OWN:AutomationHandler== Command {} is not supported for thing {}", command, thing.getUID());
+            logger.debug("==OWN:AutomationHandler== Command {} is not supported for thing {}", command, thing.getUID());
         }
     }
 
@@ -289,13 +289,13 @@ public class OpenWebNetAutomationHandler extends OpenWebNetThingHandler {
         if (internalState == STATE_STOPPED) {
             if (newState != STATE_STOPPED) { // move after stop
                 startedMovingAt = System.currentTimeMillis();
-                logger.debug("==OWN:AutomationHandler== startedMovingAt={}", startedMovingAt);
+                logger.debug("==OWN:AutomationHandler== MOVING {} - startedMovingAt={}", newState, startedMovingAt);
             }
         } else { // we were moving
             updatePosition();
             if (newState != STATE_STOPPED) { // move after move, take new timestamp
                 startedMovingAt = System.currentTimeMillis();
-                logger.debug("==OWN:AutomationHandler== startedMovingAt={}", startedMovingAt);
+                logger.debug("==OWN:AutomationHandler== MOVING {} - startedMovingAt={}", newState, startedMovingAt);
             }
             // cancel the schedule
             if (moveSchedule != null && !moveSchedule.isDone()) {

@@ -206,8 +206,7 @@ public class OpenWebNetLightingHandler extends OpenWebNetThingHandler {
     @Override
     protected void handleMessage(BaseOpenMessage msg) {
         super.handleMessage(msg);
-        Lighting lightingMsg = (Lighting) msg;
-        updateLightState(lightingMsg);
+        updateLightState((Lighting) msg);
     }
 
     /**

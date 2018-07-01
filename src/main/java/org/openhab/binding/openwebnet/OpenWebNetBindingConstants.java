@@ -44,6 +44,10 @@ public class OpenWebNetBindingConstants {
     public static final String THING_LABEL_BUS_DIMMER = "BUS Dimmer";
     public static final ThingTypeUID THING_TYPE_BUS_AUTOMATION = new ThingTypeUID(BINDING_ID, "bus_automation");
     public static final String THING_LABEL_BUS_AUTOMATION = "BUS Automation";
+    public static final ThingTypeUID THING_TYPE_BUS_TEMP_SENSOR = new ThingTypeUID(BINDING_ID, "bus_temp_sensor");
+    public static final String THING_LABEL_BUS_TEMP_SENSOR = "BUS Temperature Sensor";
+    public static final ThingTypeUID THING_TYPE_BUS_THERMOSTAT = new ThingTypeUID(BINDING_ID, "bus_thermostat");
+    public static final String THING_LABEL_BUS_THERMOSTAT = "BUS Thermostat";
     // ZIGBEE
     public static final ThingTypeUID THING_TYPE_ON_OFF_SWITCH = new ThingTypeUID(BINDING_ID, "on_off_switch");
     public static final String THING_LABEL_ON_OFF_SWITCH = "ZigBee Switch";
@@ -53,6 +57,10 @@ public class OpenWebNetBindingConstants {
     public static final String THING_LABEL_DIMMER = "ZigBee Dimmer";
     public static final ThingTypeUID THING_TYPE_AUTOMATION = new ThingTypeUID(BINDING_ID, "automation");
     public static final String THING_LABEL_AUTOMATION = "ZigBee Automation";
+    // public static final ThingTypeUID THING_TYPE_TEMP_SENSOR = new ThingTypeUID(BINDING_ID, "tempsensor");
+    // public static final String THING_LABEL_TEMP_SENSOR = "Temperature Sensor";
+    // public static final ThingTypeUID THING_TYPE_THERMOSTAT = new ThingTypeUID(BINDING_ID, "thermostat");
+    // public static final String THING_LABEL_THERMOSTAT = "Thermostat";
     // TODO transform these constants in enum+hashmaps
 
     // #SUPPORTED THINGS SETS
@@ -64,9 +72,14 @@ public class OpenWebNetBindingConstants {
     public static final Set<ThingTypeUID> AUTOMATION_SUPPORTED_THING_TYPES = Sets.newHashSet(THING_TYPE_AUTOMATION,
             THING_TYPE_BUS_AUTOMATION);
 
+    // ## Thermoregulation
+    public static final Set<ThingTypeUID> THERMOREGULATION_SUPPORTED_THING_TYPES = Sets
+            .newHashSet(THING_TYPE_BUS_TEMP_SENSOR, THING_TYPE_BUS_THERMOSTAT);
+
     // ## Groups
     public static final Set<ThingTypeUID> DEVICE_SUPPORTED_THING_TYPES = Sets.union(
-            Sets.union(LIGHTING_SUPPORTED_THING_TYPES, AUTOMATION_SUPPORTED_THING_TYPES),
+            Sets.union(LIGHTING_SUPPORTED_THING_TYPES,
+                    Sets.union(AUTOMATION_SUPPORTED_THING_TYPES, THERMOREGULATION_SUPPORTED_THING_TYPES)),
             Sets.newHashSet(THING_TYPE_DEVICE));
 
     public static final Set<ThingTypeUID> BRIDGE_SUPPORTED_THING_TYPES = Sets.newHashSet(THING_TYPE_DONGLE,
@@ -81,6 +94,9 @@ public class OpenWebNetBindingConstants {
     public static final String CHANNEL_SWITCH_02 = "switch_02";
     public static final String CHANNEL_BRIGHTNESS = "brightness";
     public static final String CHANNEL_SHUTTER = "shutter";
+    public static final String CHANNEL_TEMPERATURE = "temperature";
+    public static final String CHANNEL_TEMP_SETPOINT = "setPoint";
+    public static final String CHANNEL_ZONE_OP_MODE = "operationMode";
 
     // config properties
     public static final String CONFIG_PROPERTY_SHUTTER_RUN = "shutterRun";

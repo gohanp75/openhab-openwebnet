@@ -104,16 +104,28 @@ public class OpenWebNetDeviceDiscoveryService extends AbstractDiscoveryService
                     thingLabel = OpenWebNetBindingConstants.THING_LABEL_BUS_DIMMER;
                     break;
                 }
+                case SCS_SHUTTER_SWITCH:
                 case SCS_SHUTTER_CONTROL: {
                     thingTypeUID = OpenWebNetBindingConstants.THING_TYPE_BUS_AUTOMATION;
                     thingLabel = OpenWebNetBindingConstants.THING_LABEL_BUS_AUTOMATION;
                     break;
                 }
+                case ZIGBEE_SHUTTER_SWITCH:
                 case ZIGBEE_SHUTTER_CONTROL: {
                     thingTypeUID = OpenWebNetBindingConstants.THING_TYPE_AUTOMATION;
                     thingLabel = OpenWebNetBindingConstants.THING_LABEL_AUTOMATION;
                     break;
                 }
+                // case SCS_TEMP_SENSOR: {
+                // thingTypeUID = OpenWebNetBindingConstants.THING_TYPE_BUS_TEMP_SENSOR;
+                // thingLabel = OpenWebNetBindingConstants.THING_LABEL_BUS_TEMP_SENSOR;
+                // break;
+                // }
+                // case SCS_THERMOSTAT: {
+                // thingTypeUID = OpenWebNetBindingConstants.THING_TYPE_BUS_THERMOSTAT;
+                // thingLabel = OpenWebNetBindingConstants.THING_LABEL_BUS_THERMOSTAT;
+                // break;
+                // }
                 default:
                     logger.warn(
                             "==OWN:DeviceDiscovery== ***** device type {} is not supported, default to generic device (WHERE={})",

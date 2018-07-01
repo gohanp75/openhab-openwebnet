@@ -43,6 +43,7 @@ import org.openwebnet.message.GatewayManagement;
 import org.openwebnet.message.Lighting;
 import org.openwebnet.message.OpenMessage;
 import org.openwebnet.message.OpenMessageFactory;
+import org.openwebnet.message.Thermoregulation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -154,8 +155,14 @@ public class OpenWebNetBridgeHandler extends ConfigStatusBridgeHandler implement
             if (passwd == null) {
                 passwd = CONFIG_GATEWAY_DEFAULT_PASSWD;
             }
-            logger.debug("==OWN== BridgeHandler creating new gatewayBus with config properties: {}:{}, {}", host, port,
-                    passwd);
+            String passwdMasked;
+            if (passwd.length() >= 4) {
+                passwdMasked = "******" + passwd.substring(passwd.length() - 3, passwd.length() - 1);
+            } else {
+                passwdMasked = "******";
+            }
+            logger.debug("==OWN== Creating new BUS gateway with config properties: {}:{}, pwd={}", host, port,
+                    passwdMasked);
             gateway = OpenWebNet.gatewayBus(host, port, passwd);
         } else {
             logger.warn(
@@ -270,6 +277,7 @@ public class OpenWebNetBridgeHandler extends ConfigStatusBridgeHandler implement
     @Override
     public void onMessage(OpenMessage msg) {
         logger.trace("==OWN==  RECEIVED <<<<< {}", msg);
+        // TODO provide direct methods msg.isACK() and msg.isNACK()
         if (OpenMessage.ACK.equals(msg.getValue()) || OpenMessage.NACK.equals(msg.getValue())) {
             return;// ignore
         }
@@ -279,9 +287,9 @@ public class OpenWebNetBridgeHandler extends ConfigStatusBridgeHandler implement
             logger.debug("==OWN==  GatewayManagement WHAT = {}", gwMgmtMsg.getWhat());
             return;
         }
+        BaseOpenMessage baseMsg = (BaseOpenMessage) msg;
         // let's try to get the thing associated with this message...
-        else if (msg instanceof Lighting || msg instanceof Automation) {
-            BaseOpenMessage baseMsg = (BaseOpenMessage) msg;
+        if (baseMsg instanceof Lighting || baseMsg instanceof Automation || baseMsg instanceof Thermoregulation) {
             String ownId = ownIdFromWhere(baseMsg.getWhere());
             logger.trace("==OWN==  ownId = {}", ownId);
             ThingUID thingUID = registeredDevices.get(ownId);
@@ -298,7 +306,8 @@ public class OpenWebNetBridgeHandler extends ConfigStatusBridgeHandler implement
             }
         } else { // WHO not supported by the binding
             logger.debug(
-                    "==OWN==  BridgeHandler ignoring frame {} (this message type is not supported by the binding)");
+                    "==OWN==  BridgeHandler ignoring frame {}. This message type (WHO={}) is not supported by the binding",
+                    baseMsg, baseMsg.getWho());
         }
 
     }

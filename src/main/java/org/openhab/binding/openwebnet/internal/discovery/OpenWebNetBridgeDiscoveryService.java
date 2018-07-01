@@ -155,7 +155,11 @@ public class OpenWebNetBridgeDiscoveryService extends AbstractDiscoveryService i
 
     @Override
     public void onConnectionError(OpenError error) {
-        logger.warn("==OWN:BridgeDiscovery== onConnectionError() - CONNECTION ERROR: errorCode = {}", error);
+        if (error == OpenError.NO_SERIAL_PORTS_ERROR) {
+            logger.info("==OWN:BridgeDiscovery== no serial ports found");
+        } else {
+            logger.warn("==OWN:BridgeDiscovery== onConnectionError() - CONNECTION ERROR: errorCode = {}", error);
+        }
         stopScan();
         // TODO handle other dongle connection problems
     }

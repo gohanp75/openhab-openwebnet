@@ -50,7 +50,7 @@ public class OpenWebNetHandlerFactory extends BaseThingHandlerFactory {
     protected ThingHandler createHandler(Thing thing) {
         logger.debug("==OWN:HandlerFactory== createHandler()");
         if (OpenWebNetBridgeHandler.SUPPORTED_THING_TYPES.contains(thing.getThingTypeUID())) {
-            logger.debug("==OWN:HandlerFactory== creating NEW Bridge Handler");
+            logger.debug("==OWN:HandlerFactory== creating NEW BRIDGE Handler");
             OpenWebNetBridgeHandler handler = new OpenWebNetBridgeHandler((Bridge) thing);
             registerDiscoveryService(handler);
             return handler;
@@ -61,6 +61,10 @@ public class OpenWebNetHandlerFactory extends BaseThingHandlerFactory {
             logger.debug("==OWN:HandlerFactory== creating NEW AUTOMATION Handler");
             return new OpenWebNetAutomationHandler(thing);
         }
+        // else if (OpenWebNetThermoregulationHandler.SUPPORTED_THING_TYPES.contains(thing.getThingTypeUID())) {
+        // logger.debug("==OWN:HandlerFactory== creating NEW THERMO Handler");
+        // return new OpenWebNetThermoregulationHandler(thing);
+        // }
         return null;
     }
 

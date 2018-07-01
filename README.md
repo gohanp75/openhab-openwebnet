@@ -29,9 +29,10 @@ The following Things and OpenWebNet `WHOs` are supported:
 | Category   | WHO   | Thing Type IDs                    | Discovery?          | Feedback from BUS?          | Description                                                                             | Status           |
 | ---------- | :---: | :-------------------------------: | :----------------: | :----------------: | --------------------------------------------------------------------------------------- | ---------------- |
 | Gateway    | `13`  | `bus_gateway`                     | *work in progress*                | n/a  | Any IP gateway supporting OpenWebNet protocol should work (e.g. F454/MyHOMEServer1/MH202/F455/MH200N,...) | Successfully tested: F454, MyHOMEServer1, MH202, F455  |
-| Lightning| `1`   | `bus_on_off_switch`, `bus_dimmer` | Yes                | Yes                | BUS switches and dimmers                                                                 | Successfully tested: F411/2, F411/4, F411U2  |
-| Automation | `2`   | `bus_automation`                | Yes | Yes                  | BUS shutters, with position feedback and auto-calibration via a *UP >> DOWN >> Position%* cycle                                                                                       | Successfully tested: LN4672M2  |
-| Temperature Control| `4`   | *work in progress*                | - | -| -                                                                                       | -  |
+| Lightning | `1`   | `bus_on_off_switch`, `bus_dimmer` | Yes                | Yes                | BUS switches and dimmers                                                                 | Successfully tested: F411/2, F411/4, F411U2, F429  |
+| Automation | `2`   | `bus_automation`                | Yes | Yes                  | BUS roller shutters, with position feedback and auto-calibration via a *UP >> DOWN >> Position%* cycle                                                                                       | Successfully tested: LN4672M2  |
+| Temperature Control | `4`   | *work in progress*  |  |  |  |
+
 
 ### ZigBee (Radio)
 
@@ -39,22 +40,22 @@ The following Things and OpenWebNet `WHOs` are supported:
 | ---------- | :---: | :------------------------------------------: | :----------------: | :--------: | ----------------------------------------------------------- | ------------------------------------ |
 | Gateway    | `13`  | `dongle`                                     |     Yes            | n/a         | ZigBee USB Dongle (BTicino/Legrand models: BTI-3578/088328) | Tested: BTI-3578                     |
 | Lightning| `1`   | `dimmer`, `on_off_switch`, `on_off_switch2u` | Yes                | Yes        | ZigBee dimmers, switches and 2-unit switches                | Tested: BTI-4591, BTI-3584, BTI-4585 |
-| Automation | `2`   | `automation`                           | Yes | Yes          | ZigBee shutters, with position feedback and auto-calibration via a *UP >> DOWN >> Position%* cycle                                                           | *To be tested*    |
-| Temperature Control| `4`   | *work in progress*                | - | -| -                                                                                       | -  |
+| Automation | `2`   | `automation`                           | Yes | Yes          | ZigBee roller shutters, with position feedback and auto-calibration via a *UP >> DOWN >> Position%* cycle                                                           | *To be tested*    |
+
 ## Installation
 
 Since it's still in development stage and not part of the official distribution, to install the binding copy the jar file to your openHAB2 addons folder, on Linux or RaspberryPi is under: 
 
 `/usr/share/openhab2/addons/`
 
-Also, from **openHAB 2.3.0** and afterwards the serial feature dependency must be activated manually from Karaf console:
+Also, from **openHAB 2.3.0** onwards the serial feature dependency must be activated manually from Karaf console:
 
 1. go to [Karaf console](https://www.openhab.org/docs/administration/console.html)
 1. Type `feature:install openhab-transport-serial`
 
 The binding should now be installed: check in *PaperUI > Configuration > Bindings*.
 
-### Upgrade from previous release
+### Upgrade from previous release version
 
 The previous version of the binding must be uninstalled using Karaf console (is not enough update the binding jar file).
 It is suggested also to remove BTicino Things before uninstalling the old binding, and  discover/configure them again after binding has been updated.
@@ -65,7 +66,7 @@ from Karaf console:
 1. `bundle:uninstall <ID>` to remove previous version of the binding
 1. copy the new binding jar file to `addons/` folder
 
-The new version of the binding should now be installed.
+The new version of the binding should now be installed, check the version number in *PaperUI > Configuration > Bindings*.
 
 ## Discovery
 
@@ -128,15 +129,17 @@ For all OpenWebNet devices it must be configured:
   - example for BUS/SCS: Point to Point `A=6 PL=4` on local bus --> `where="64#4#01"`
   - example for ZigBee/Radio: use decimal format address without the UNIT part and network: ZigBee `WHERE=414122201#9` --> `where="4141222"`
 
+
 ## Channels
 
 Devices support some of the following channels:
 
-| Channel Type ID               | Item Type     | Description                                                          |
-| ----------------------------- | ------------- | -------------------------------------------------------------------- |
-| switch                        | Switch        | This channel supports switching the device `ON` and `OFF`                |
-| brightness                    | Dimmer        | This channel supports adjusting the brightness value (Percent)                |
-| shutter | Rollershutter | This channel supports activation of roller shutters (`UP`, `DOWN`, `STOP`, Percent). For Percent and position feedback to work the `shutterRun` parameter must be configured equal to the time (in ms) to go from full UP to full DOWN. Use `shutterRun=AUTO` (default) to calibrate the shutter automatically the first time a Percent command is sent to the shutter: a *UP >> DOWN >> Position%* cycle will be performed automatically to calibrate the shutter. |
+| Channel Type ID               | Item Type          | Description                                                            | Read/Write |
+|-------------------------------|--------------------|------------------------------------------------------------------------|:----------:|
+| switch                        | Switch             | To switch the device `ON` and `OFF`                                  |     R/W    |
+| brightness                    | Dimmer             | To adjust the brightness value (Percent)                               |    R/W     |
+| shutter                       | Rollershutter      | To activate roller shutters (`UP`, `DOWN`, `STOP`, Percent). For Percent and position feedback to work the `shutterRun` parameter must be configured equal to the time (in ms) to go from full UP to full DOWN. Use `shutterRun=AUTO` (default) to calibrate the shutter automatically the first time a Percent command is sent to the shutter: a *UP >> DOWN >> Position%* cycle will be performed automatically to calibrate the shutter. Before adding/configuring roller shutter Things (or installing a binding update) it is suggested to have all roller shutter `UP`, otherwise the Percent command won’t work until the roller shutter is fully rolled up |     R/W     |
+
 
 ## Full Example
 
@@ -187,22 +190,21 @@ Rollershutter BUS_Shutter  { channel="openwebnet:bus_automation:mybridge1:myshut
 
 ## Changelog
 
-**v2.4.0-b6** *NOT YET RELEASED*
+**v2.4.0-b6** - 02/07/2018
 
-- **[NEW]** Initial support for `WHO=4` Thermoregulation on BUS. In this version only Temperature sensors are supported
+- updated to openHAB 2.4.0 dev branch. The bundle should work with both 2.2 and 2.3 versions of openHAB.
 - **[FIX #7]** added support for inverted UP/DOWN automation commands for older USB ZigBee dongles
 - **[BUG]** some switches were wrongly discovered as dimmers (now use only commands for device discovery)
 - **[FIX]** added support for SCS/ZIGBEE_SHUTTER_SWITCH (515/513) device types
-- **[FIX]** added support for F455 gateway using `*99*0##` command session
-- updated to openHAB 2.4.0 dev branch
+- **[FIX]** added support for F455 gateways using `*99*0##` command session
 
-**v2.3.0-b5**
+**v2.3.0-b5** - 26/05/2018
 
-- **[BUG #1]** state monitoring from BUS (feedback) is no longer stopped if unsupported messages are received from BUS
-- **[FIX]** automatic reconnect to BUS when connection is lost
-- **[NEW]** support for Gateways with string passwords (HMAC authentication), like MyHOMEServer1 
-- **[NEW]** support for `WHO=2` Automation (shutters), both on BUS and ZigBee, with position feedback and  goto Percent. It requires setting the shutter run-time in the thing configuration. Experimental auto-calibration of the run-time is also supported!
+- [BUG #1] state monitoring from BUS (feedback) is no longer stopped if unsupported messages are received from BUS
+- [FIX] automatic reconnect to BUS when connection is lost
+- [NEW] support for Gateways with string passwords (HMAC authentication), like MyHOMEServer1 
+- [NEW] support for `WHO=2` Automation (shutters), both on BUS and ZigBee, with position feedback and  goto Percent. It requires setting the shutter run-time in the thing configuration. Experimental auto-calibration of the run-time is also supported!
 
-**v2.3.0-b4**
+**v2.3.0-b4** - 09/04/2018
 
 - first public release

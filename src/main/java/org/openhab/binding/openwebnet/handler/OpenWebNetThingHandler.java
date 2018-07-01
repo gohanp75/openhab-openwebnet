@@ -10,8 +10,13 @@ package org.openhab.binding.openwebnet.handler;
 
 import static org.openhab.binding.openwebnet.OpenWebNetBindingConstants.*;
 
+import java.math.BigDecimal;
 import java.util.concurrent.TimeUnit;
 
+import javax.measure.Quantity;
+import javax.measure.Unit;
+
+import org.eclipse.smarthome.core.library.types.QuantityType;
 import org.eclipse.smarthome.core.thing.Bridge;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
@@ -123,7 +128,7 @@ public abstract class OpenWebNetThingHandler extends BaseThingHandler {
      * @param msg BaseOpenMessage to handle
      */
     protected void handleMessage(BaseOpenMessage msg) {
-        logger.debug("==OWN:ThingHandler== handleMessage() for thing: {}", getThing().getUID());
+        // logger.debug("==OWN:ThingHandler== handleMessage() for thing: {}", getThing().getUID());
         // update status to ONLINE if not already online
         if (ThingStatus.ONLINE != getThing().getStatus()) {
             updateStatus(ThingStatus.ONLINE);
@@ -181,4 +186,10 @@ public abstract class OpenWebNetThingHandler extends BaseThingHandler {
         }
     }
 
+    protected <U extends Quantity<U>> QuantityType<U> commandToQuantityType(Command command, Unit<U> defaultUnit) {
+        if (command instanceof QuantityType) {
+            return (QuantityType<U>) command;
+        }
+        return new QuantityType<U>(new BigDecimal(command.toString()), defaultUnit);
+    }
 }
