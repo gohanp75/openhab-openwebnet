@@ -48,11 +48,14 @@ Since it's still in development stage and not part of the official distribution,
 
 `/usr/share/openhab2/addons/`
 
-Also, from **openHAB 2.3.0** onwards the serial feature dependency must be activated manually from Karaf console:
+Also, from **openHAB 2.3.0** on wards some features dependencies must be activated manually from Karaf console:
 
 1. go to [Karaf console](https://www.openhab.org/docs/administration/console.html)
-1. Type `feature:install openhab-transport-serial`
-
+1. Type:
+ `feature:install openhab-transport-serial`
+1. and if you are using  **openHAB 2.4.0-SNAPSHOT** also type:
+ `feature:install esh-io-transport-upnp`
+ 
 The binding should now be installed: check in *PaperUI > Configuration > Bindings*.
 
 ### Upgrade from previous release version
