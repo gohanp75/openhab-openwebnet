@@ -3,11 +3,11 @@ Bundle-ManifestVersion: 2
 Bundle-Name: OpenWebNet Binding
 Bundle-SymbolicName: org.openhab.binding.openwebnet;singleton:=true
 Bundle-Vendor: openHAB
-Bundle-Version: 2.4.0.b6
+Bundle-Version: 2.4.0.b7
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ClassPath: 
  ., 
- lib/openwebnet-lib-0.9.7.jar
+ lib/openwebnet-lib-0.9.14.jar
 Import-Package: com.google.common.base,
  com.google.common.collect,
  gnu.io,

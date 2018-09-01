@@ -25,14 +25,14 @@ import org.eclipse.smarthome.core.thing.ThingStatusDetail;
 import org.eclipse.smarthome.core.thing.binding.BaseThingHandler;
 import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.RefreshType;
-import org.openwebnet.OpenGateway;
 import org.openwebnet.message.BaseOpenMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * The {@link OpenWebNetThingHandler} is responsible for handling commands for a OpenWebNet device.
- * It's the abstract class for all OpenWebNet things.
+ * It's the abstract class for all OpenWebNet things. It should be extended by each specific OpenWebNet category of
+ * device (WHO)
  *
  * @author Massimo Valla - Initial contribution
  */
@@ -40,11 +40,8 @@ public abstract class OpenWebNetThingHandler extends BaseThingHandler {
 
     private final Logger logger = LoggerFactory.getLogger(OpenWebNetThingHandler.class);
 
-    // public final static Set<ThingTypeUID> SUPPORTED_THING_TYPES =
-    // OpenWebNetBindingConstants.DEVICE_SUPPORTED_THING_TYPES;
-
     protected OpenWebNetBridgeHandler bridgeHandler;
-    protected OpenGateway gateway;
+    // protected OpenGateway gateway;
     protected String ownId; // OpenWebNet identifier for this device
 
     public OpenWebNetThingHandler(Thing thing) {
@@ -58,7 +55,7 @@ public abstract class OpenWebNetThingHandler extends BaseThingHandler {
         if (bridge != null) {
             if (bridge.getHandler() != null) {
                 bridgeHandler = (OpenWebNetBridgeHandler) bridge.getHandler();
-                gateway = bridgeHandler.getGateway();
+                // gateway = bridgeHandler.getGateway();
                 ownId = (String) getConfig().get(CONFIG_PROPERTY_WHERE);
                 // FIXME deviceWhere : create a final deviceWhere to be set at initialization and used later
                 bridgeHandler.registerDevice(ownId, getThing().getUID());
@@ -80,12 +77,12 @@ public abstract class OpenWebNetThingHandler extends BaseThingHandler {
     @Override
     public void handleCommand(ChannelUID channel, Command command) {
         logger.debug("==OWN:ThingHandler== handleCommand() (command={} - channel={})", command, channel);
-        if (gateway == null) {
+        if (bridgeHandler.gateway == null) {
             logger.warn("==OWN:ThingHandler== Thing {} is not associated to any gateway, skipping command",
                     getThing().getUID());
             return;
         }
-        if (!gateway.isConnected()) {
+        if (!bridgeHandler.gateway.isConnected()) {
             logger.warn("==OWN:ThingHandler== Gateway is NOT connected, setting thing={} to OFFLINE", thing.getUID());
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.BRIDGE_OFFLINE);
             return;
@@ -122,8 +119,7 @@ public abstract class OpenWebNetThingHandler extends BaseThingHandler {
 
     /**
      * Handle incoming message from OWN network directed to a device. It should be further implemented by each specific
-     * OpenWebNet category of device
-     * (WHO)
+     * OpenWebNet category of device (WHO)
      *
      * @param msg BaseOpenMessage to handle
      */

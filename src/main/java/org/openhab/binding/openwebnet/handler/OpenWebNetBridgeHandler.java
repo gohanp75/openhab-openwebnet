@@ -65,7 +65,7 @@ public class OpenWebNetBridgeHandler extends ConfigStatusBridgeHandler implement
 
     private Map<String, ThingUID> registeredDevices = new ConcurrentHashMap<>();
 
-    private OpenGateway gateway;
+    protected OpenGateway gateway;
     private boolean isBusGateway = false;
 
     private boolean isGatewayConnected = false;
@@ -99,16 +99,17 @@ public class OpenWebNetBridgeHandler extends ConfigStatusBridgeHandler implement
         gateway.subscribe(this);
         if (gateway.isConnected()) { // gateway is already connected, device can go ONLINE
             isGatewayConnected = true;
-            logger.info("==OWN== BridgeHandler Gateway status: CONNECTED -> setting status to ONLINE");
+            logger.info("==OWN== ------------------- ALREADY CONNECTED -> setting status to ONLINE");
             updateStatus(ThingStatus.ONLINE);
         } else {
             updateStatus(ThingStatus.UNKNOWN);
-            logger.debug("==OWN== BridgeHandler Trying to connect gateway...");
+            logger.debug("==OWN== Trying to connect gateway...");
             gateway.connect();
             scheduler.schedule(() -> {
                 // if state is still UNKNOWN after timer ends, set the device as OFFLINE
                 if (thing.getStatus().equals(ThingStatus.UNKNOWN)) {
-                    logger.info("==OWN==  BridgeHandler still unknown. Setting device={} to OFFLINE", thing.getUID());
+                    logger.info("==OWN== BridgeHandler status still UNKNOWN. Setting device={} to OFFLINE",
+                            thing.getUID());
                     updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.OFFLINE.COMMUNICATION_ERROR);
                 }
             }, GATEWAY_ONLINE_TIMEOUT, TimeUnit.SECONDS);
@@ -166,7 +167,7 @@ public class OpenWebNetBridgeHandler extends ConfigStatusBridgeHandler implement
             gateway = OpenWebNet.gatewayBus(host, port, passwd);
         } else {
             logger.warn(
-                    "==OWN== BridgeHandler Cannot connect to BTicino bridge. No IP/host has been provided in Bridge configuration.");
+                    "==OWN== BridgeHandler Cannot connect to gateway. No IP/host has been provided in Bridge configuration.");
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.OFFLINE.CONFIGURATION_ERROR,
                     "@text/offline.conf-error-no-ip-address");
         }
@@ -176,7 +177,7 @@ public class OpenWebNetBridgeHandler extends ConfigStatusBridgeHandler implement
     public void handleCommand(ChannelUID channelUID, Command command) {
         logger.debug("==OWN== BridgeHandler handleCommand (command={} - channel={})", command, channelUID);
         if (!gateway.isConnected()) {
-            logger.debug("==OWN== BridgeHandler Gateway is NOT connected, skipping command");
+            logger.warn("==OWN== BridgeHandler gateway is NOT connected, skipping command");
             return;
         } else {
             logger.warn("==OWN== BridgeHandler Channel not supported: channel={}", channelUID);
@@ -208,25 +209,25 @@ public class OpenWebNetBridgeHandler extends ConfigStatusBridgeHandler implement
 
     @Override
     public void handleRemoval() {
-        logger.debug("==OWN==  XXX BridgeHandler.handleRemoval() ");
+        logger.debug("==OWN== BridgeHandler.handleRemoval() ");
         if (gateway != null) {
             gateway.closeConnection();
             gateway.unsubscribe(this);
-            logger.debug("==OWN==  XXX Connection closed and unsubscribed.");
+            logger.debug("==OWN== Connection closed and unsubscribed.");
         }
-        logger.debug("==OWN==  XXX now calling super.handleRemoval()");
+        logger.debug("==OWN== now calling super.handleRemoval()");
         super.handleRemoval();
     }
 
     @Override
     public void dispose() {
-        logger.debug("==OWN==  XXX BridgeHandler.dispose() ");
+        logger.debug("==OWN== BridgeHandler.dispose() ");
         if (gateway != null) {
             gateway.closeConnection();
             gateway.unsubscribe(this);
-            logger.debug("==OWN==  XXX Connection closed and unsubscribed.");
+            logger.debug("==OWN== Connection closed and unsubscribed.");
         }
-        logger.debug("==OWN==  XXX now calling super.dispose()");
+        logger.debug("==OWN== now calling super.dispose()");
         super.dispose();
     }
 
@@ -236,9 +237,9 @@ public class OpenWebNetBridgeHandler extends ConfigStatusBridgeHandler implement
      * @param listener to receive device found notifications
      */
     public void searchDevices(OpenNewDeviceListener listener) {
-        logger.debug("==OWN==  BridgeHandler.searchDevices() ");
+        logger.debug("==OWN==  BridgeHandler.searchDevices()");
         if (!gateway.isConnected()) {
-            logger.warn("==OWN==  bridge is NOT connected, cannot search for devices!");
+            logger.warn("==OWN==  gateway is NOT connected, cannot search for devices!");
             return;
         }
         gateway.discoverDevices(listener);
@@ -247,7 +248,7 @@ public class OpenWebNetBridgeHandler extends ConfigStatusBridgeHandler implement
     /**
      * Register a device thing to this bridge handler based on its id
      *
-     * @param ownId device OpenWebNet id
+     * @param ownId    device OpenWebNet id
      * @param thingUID ThingUID
      */
     protected void registerDevice(String ownId, ThingUID thingUID) {
@@ -316,11 +317,11 @@ public class OpenWebNetBridgeHandler extends ConfigStatusBridgeHandler implement
     public void onConnected() {
         isGatewayConnected = true;
         if (gateway instanceof OpenGatewayZigBee) {
-            logger.info("==OWN==  Gateway status: CONNECTED on port: {}",
+            logger.info("==OWN== ------------------- CONNECTED to ZigBee gateway - USB port: {}",
                     ((OpenGatewayZigBee) gateway).getConnectedPort());
         } else {
-            logger.info("==OWN==  Gateway BUS CONNECTED to {}:{}", ((OpenGatewayBus) gateway).getHost(),
-                    ((OpenGatewayBus) gateway).getPort());
+            logger.info("==OWN== ------------------- CONNECTED to BUS gateway - {}:{}",
+                    ((OpenGatewayBus) gateway).getHost(), ((OpenGatewayBus) gateway).getPort());
             // update gw model
             updateProperty(CONFIG_PROPERTY_MODEL, ((OpenGatewayBus) gateway).getModelName());
             /*
@@ -339,7 +340,8 @@ public class OpenWebNetBridgeHandler extends ConfigStatusBridgeHandler implement
         String cause;
         switch (error) {
             case DISCONNECTED:
-                LIB_LINKAGE_ERROR: cause = "Please check that the ZigBee dongle is correctly plugged-in, and the driver installed and loaded";
+            case LIB_LINKAGE_ERROR:
+                cause = "Please check that the ZigBee dongle is correctly plugged-in, and the driver installed and loaded";
                 break;
             case NO_SERIAL_PORTS_ERROR:
                 cause = "No serial ports found";
@@ -348,7 +350,7 @@ public class OpenWebNetBridgeHandler extends ConfigStatusBridgeHandler implement
                 cause = "Make sure you have a working Java Runtime Environment installed in 32 bit version";
                 break;
             case IO_EXCEPTION_ERROR:
-                cause = "Connection error (IO Exception). Disconnected from BUS gateway. Check network and Configuration Parameters";
+                cause = "Connection error (IOException). Check network and gateway thing Configuration Parameters";
                 break;
             case OTHER_ERROR:
             default:
@@ -374,7 +376,7 @@ public class OpenWebNetBridgeHandler extends ConfigStatusBridgeHandler implement
     @Override
     public void onDisconnected() {
         isGatewayConnected = false;
-        logger.error("==OWN==  ERROR: The gateway has been disconnected.");
+        logger.warn("==OWN== ---------- DISCONNECTED from the gateway");
         updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.OFFLINE.COMMUNICATION_ERROR,
                 "The gateway HAS BEEN DISCONNECTED");
         logger.debug("==OWN==  Bridge status set to OFFLINE");
@@ -383,9 +385,9 @@ public class OpenWebNetBridgeHandler extends ConfigStatusBridgeHandler implement
 
     @Override
     public void onReconnected() {
-        // logger.debug("==OWN== onReconnected()");
+        logger.info("==OWN== ------------------- RE-CONNECTED to gateway!");
         updateStatus(ThingStatus.ONLINE);
-        logger.debug("==OWN==  Bridge status set to ONLINE");
+        logger.debug("==OWN== Bridge status set to ONLINE");
         // TODO refresh devices' status?
 
     }
@@ -397,8 +399,21 @@ public class OpenWebNetBridgeHandler extends ConfigStatusBridgeHandler implement
      * @return ownId
      */
     public String ownIdFromWhere(String where) {
+        String str = "";
         if (isBusGateway) {
-            return where;
+            if (where.indexOf('#') < 0) { // no hash present
+                str = where;
+            } else if (where.indexOf("#4#") > 0) { // local bus: APL#4#bus
+                str = where;
+            } else if (where.indexOf('#') == 0) { // thermo zone via central unit: #0 or #Z (Z=[1-99]) --> Z
+                str = where.substring(1);
+            } else if (where.indexOf('#') > 0) { // thermo zone and actuator N: Z#N (Z=[1-99], N=[1-9]) -- > Z
+                str = where.substring(0, where.indexOf('#'));
+            } else {
+                logger.warn("==OWN== ownIdFromWhere() unexpected WHERE: {}", where);
+                str = where;
+            }
+            return str;
         } else {
             return OpenMessageFactory.getAddrFromWhere(where);
         }

@@ -70,7 +70,7 @@ public class OpenWebNetLightingHandler extends OpenWebNetThingHandler {
     protected void requestChannelState(ChannelUID channel) {
         logger.debug("==OWN:LightingHandler== requestChannelState() thingUID={} channel={}", thing.getUID(),
                 channel.getId());
-        gateway.send(Lighting.requestStatus(toWhere(channel), lightingType));
+        bridgeHandler.gateway.send(Lighting.requestStatus(toWhere(channel), lightingType));
     }
 
     @Override
@@ -106,9 +106,9 @@ public class OpenWebNetLightingHandler extends OpenWebNetThingHandler {
         logger.debug("==OWN:LightingHandler== handleSwitchCommand() (command={} - channel={})", command, channel);
         if (command instanceof OnOffType) {
             if (OnOffType.ON.equals(command)) {
-                gateway.send(Lighting.requestTurnOn(toWhere(channel), lightingType));
+                bridgeHandler.gateway.send(Lighting.requestTurnOn(toWhere(channel), lightingType));
             } else if (OnOffType.OFF.equals(command)) {
-                gateway.send(Lighting.requestTurnOff(toWhere(channel), lightingType));
+                bridgeHandler.gateway.send(Lighting.requestTurnOff(toWhere(channel), lightingType));
             }
         } else {
             logger.warn("==OWN:LightingHandler== Unsupported command: {}", command);
@@ -183,7 +183,7 @@ public class OpenWebNetLightingHandler extends OpenWebNetThingHandler {
                     newWhat = Lighting.WHAT.DIM_20;
                 }
                 lastBrightnessChangeSentTS = System.currentTimeMillis();
-                gateway.send(Lighting.requestDimTo(where, newWhat, lightingType));
+                bridgeHandler.gateway.send(Lighting.requestDimTo(where, newWhat, lightingType));
                 logger.debug("################### {}", lastBrightnessChangeSentTS);
                 if (!(command instanceof PercentType)) {
                     updateState(channel, new PercentType(newWhatInt * 10));
@@ -265,7 +265,8 @@ public class OpenWebNetLightingHandler extends OpenWebNetThingHandler {
                 // was sent >BRIGHTNESS_CHANGE_DELAY ago
                 logger.debug("$bri change sent >={}ms ago, sending requestStatus...", BRIGHTNESS_CHANGE_DELAY);
                 brightnessLevelRequested = true;
-                gateway.send(Lighting.requestStatus(where, lightingType));
+                Lighting li = Lighting.requestStatus(where, lightingType);
+                bridgeHandler.gateway.send(li);
             } else {
                 logger.debug("$bri change sent {}<{}ms, NO requestStatus needed", delta, BRIGHTNESS_CHANGE_DELAY);
             }

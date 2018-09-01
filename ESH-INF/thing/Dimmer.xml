@@ -16,7 +16,7 @@
 		
 		<channels>
 			<channel id="brightness" typeId="brightness" />
-			<channel id="dimmerLevel" typeId="dimmerLevel" />
+			<!--  <channel id="dimmerLevel" typeId="dimmerLevel" /> -->
 		</channels>
 		
 		<properties>

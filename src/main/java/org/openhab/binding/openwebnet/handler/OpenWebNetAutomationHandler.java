@@ -11,6 +11,8 @@ package org.openhab.binding.openwebnet.handler;
 
 import static org.openhab.binding.openwebnet.OpenWebNetBindingConstants.*;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Set;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -44,6 +46,7 @@ import org.slf4j.LoggerFactory;
 public class OpenWebNetAutomationHandler extends OpenWebNetThingHandler {
 
     private final Logger logger = LoggerFactory.getLogger(OpenWebNetAutomationHandler.class);
+    private static final SimpleDateFormat formatter = new SimpleDateFormat("ss.SSS");
 
     public final static Set<ThingTypeUID> SUPPORTED_THING_TYPES = OpenWebNetBindingConstants.AUTOMATION_SUPPORTED_THING_TYPES;
 
@@ -64,11 +67,11 @@ public class OpenWebNetAutomationHandler extends OpenWebNetThingHandler {
     public static final int CALIBRATION_GOING_DOWN = 2;
 
     // positions
+    public static final int POSITION_MAX_STEPS = 100;
     public static final int POSITION_DOWN = 100;
     public static final int POSITION_UP = 0;
     public static final int POSITION_UNKNOWN = -1;
     public static final int SHUTTER_RUN_UNDEFINED = -1;
-    // private static final int SHUTTER_RUN_MIN = 1000; // ms
 
     private int shutterRun = SHUTTER_RUN_UNDEFINED;
 
@@ -76,7 +79,6 @@ public class OpenWebNetAutomationHandler extends OpenWebNetThingHandler {
     private int internalState = STATE_UNKNOWN;
     private int positionEst = POSITION_UNKNOWN;
     private ScheduledFuture<?> moveSchedule;
-    // private boolean goToPositionRequested = false;
     private int positionRequested = POSITION_UNKNOWN;
     private int calibrating = CALIBRATION_INACTIVE;
     private static final int STEP_TIME_MIN = 50; // ms
@@ -137,7 +139,8 @@ public class OpenWebNetAutomationHandler extends OpenWebNetThingHandler {
     protected void requestChannelState(ChannelUID channel) {
         logger.debug("==OWN:AutomationHandler== requestChannelState() thingUID={} channel={}", thing.getUID(),
                 channel.getId());
-        gateway.send(Automation.requestStatus(toWhere(channel), automationType));
+        bridgeHandler.gateway.send(Automation.requestStatus(toWhere(channel), automationType));
+        // TODO request shutter position, if natively supported by device
     }
 
     @Override
@@ -163,61 +166,77 @@ public class OpenWebNetAutomationHandler extends OpenWebNetThingHandler {
      * @param command
      */
     private void handleShutterCommand(ChannelUID channel, Command command) {
-        logger.debug("==OWN:AutomationHandler== handleShutterCommand() (command={})", command);
+        // logger.debug("==OWN:AutomationHandler== # " + toWhere(channel) + " # handleShutterCommand() (command={})",
+        // command);
         calibrating = CALIBRATION_INACTIVE;
         if (command instanceof UpDownType) {
-            if (UpDownType.UP.equals(command)) {
-                gateway.send(Automation.requestMoveUp(toWhere(channel), automationType));
+            if (UpDownType.UP.equals(command)) { // UP
+                bridgeHandler.gateway.send(Automation.requestMoveUp(toWhere(channel), automationType));
             } else { // DOWN
-                gateway.send(Automation.requestMoveDown(toWhere(channel), automationType));
+                bridgeHandler.gateway.send(Automation.requestMoveDown(toWhere(channel), automationType));
             }
-        } else if (StopMoveType.STOP.equals(command)) {
-            gateway.send(Automation.requestStop(toWhere(channel), automationType));
-        } else if (command instanceof PercentType) {
+        } else if (StopMoveType.STOP.equals(command)) { // STOP
+            bridgeHandler.gateway.send(Automation.requestStop(toWhere(channel), automationType));
+        } else if (command instanceof PercentType) { // PERCENT
             if (internalState != STATE_STOPPED) {
-                logger.debug("==OWN:AutomationHandler== already moving, ignoring go-to-XX%");
+                logger.debug(
+                        "==OWN:AutomationHandler==  # " + toWhere(channel) + " # already moving, ignoring go-to-XX%");
                 return;
             }
             int percent = ((PercentType) command).intValue();
             if (percent != positionEst) {
-                if (percent == POSITION_DOWN) { // all down
-                    gateway.send(Automation.requestMoveDown(toWhere(channel), automationType));
-                } else if (percent == POSITION_UP) { // all up
-                    gateway.send(Automation.requestMoveUp(toWhere(channel), automationType));
-                } else {// go to XX%
-                    logger.debug("==OWN:AutomationHandler== {}% requested", percent);
+                if (percent == POSITION_DOWN) { // GO TO 100%
+                    bridgeHandler.gateway.send(Automation.requestMoveDown(toWhere(channel), automationType));
+                } else if (percent == POSITION_UP) { // GO TO 0%
+                    bridgeHandler.gateway.send(Automation.requestMoveUp(toWhere(channel), automationType));
+                } else {// GO TO XX%
+                    logger.debug("==OWN:AutomationHandler== # " + toWhere(channel) + " # {}% requested", percent);
                     if (shutterRun == SHUTTER_RUN_UNDEFINED) {
-                        logger.debug("==OWN:AutomationHandler== && shutterRun not configured, starting CALIBRATION...");
+                        logger.debug("==OWN:AutomationHandler== & " + toWhere(channel) + " & " + toWhere(channel)
+                                + " & shutterRun not configured, starting CALIBRATION...");
                         calibrating = CALIBRATION_ACTIVATED;
-                        gateway.send(Automation.requestMoveUp(toWhere(channel), automationType));
+                        bridgeHandler.gateway.send(Automation.requestMoveUp(toWhere(channel), automationType));
                         positionRequested = percent;
-                    } else if (shutterRun > 0 && positionEst != POSITION_UNKNOWN) { // these must be known to calculate
+                    } else if (shutterRun > 0 && positionEst != POSITION_UNKNOWN) { // these two must be known to
+                                                                                    // calculate
                                                                                     // moveTime
                         // calculate how much time we have to move and set a deadline to stop after that time
                         int moveTime = Math
-                                .round(((float) Math.abs(percent - positionEst) / POSITION_DOWN * shutterRun));
-                        logger.debug("==OWN:AutomationHandler== moveTime={}", moveTime);
+                                .round(((float) Math.abs(percent - positionEst) / POSITION_MAX_STEPS * shutterRun));
+                        logger.debug("==OWN:AutomationHandler== # " + toWhere(channel) + " # target moveTime={}",
+                                moveTime);
                         if (moveTime > STEP_TIME_MIN) { // FIXME calibrate this
                             if (moveSchedule != null && !moveSchedule.isDone()) {
                                 // a moveSchedule was already scheduled and is not done... let's cancel the schedule
                                 moveSchedule.cancel(false);
                                 logger.warn( // should not get here....
-                                        "==OWN:AutomationHandler== new XX% requested, old moveSchedule cancelled");
+                                        "==OWN:AutomationHandler== # " + toWhere(channel)
+                                                + " # new XX% requested, old moveSchedule cancelled");
                             }
+                            // IMPORTANT IMPORTANT
                             // start the schedule BEFORE sending the command, because the synch command waits for ACK
-                            // and can take some 300ms
+                            // and can take some 300ms --- IS THIS STILL NEEDED ??
+                            logger.debug("==OWN:AutomationHandler== # " + toWhere(channel) + " # Starting schedule...");
                             moveSchedule = scheduler.schedule(() -> {
-                                logger.debug("==OWN:AutomationHandler== moveSchedule expired, sending STOP...");
-                                gateway.send(Automation.requestStop(toWhere(channel), automationType));
+                                logger.debug("==OWN:AutomationHandler== # " + toWhere(channel)
+                                        + " # moveSchedule expired, sending STOP...");
+                                bridgeHandler.gateway
+                                        .sendHighPriority(Automation.requestStop(toWhere(channel), automationType));
                             }, moveTime, TimeUnit.MILLISECONDS);
+                            logger.debug("==OWN:AutomationHandler== # " + toWhere(channel)
+                                    + " # ...schedule started, now sending highPriority command...");
                             if (percent < positionEst) {
-                                gateway.send(Automation.requestMoveUp(toWhere(channel), automationType));
+                                bridgeHandler.gateway
+                                        .sendHighPriority(Automation.requestMoveUp(toWhere(channel), automationType));
                             } else {
-                                gateway.send(Automation.requestMoveDown(toWhere(channel), automationType));
+                                bridgeHandler.gateway
+                                        .sendHighPriority(Automation.requestMoveDown(toWhere(channel), automationType));
                             }
-                            logger.debug("==OWN:AutomationHandler== ...sending returned");
+                            logger.debug("==OWN:AutomationHandler== # " + toWhere(channel)
+                                    + " # ...gateway.sendHighPriority() returned");
                         } else {
-                            logger.warn("==OWN:AutomationHandler== moveTime < MIN_STEP_TIME, do nothing");
+                            logger.debug("==OWN:AutomationHandler== # " + toWhere(channel)
+                                    + " # moveTime < STEP_TIME_MIN, do nothing");
                         }
                     } else {
                         logger.warn(
@@ -226,54 +245,60 @@ public class OpenWebNetAutomationHandler extends OpenWebNetThingHandler {
                     }
                 }
             } else {
-                logger.debug(
-                        "==OWN:AutomationHandler== handleShutterCommand() Command {}% == positionEst, nothing to do",
-                        percent);
+                logger.debug("==OWN:AutomationHandler== # " + toWhere(channel)
+                        + " # handleShutterCommand() Command {}% == positionEst, nothing to do", percent);
             }
         } else {
-            logger.debug("==OWN:AutomationHandler== Command {} is not supported for thing {}", command, thing.getUID());
+            logger.warn("==OWN:AutomationHandler== Command {} is not supported for thing {}", command, thing.getUID());
         }
     }
 
     @Override
     protected void handleMessage(BaseOpenMessage msg) {
-        super.handleMessage(msg);
         updateAutomationState((Automation) msg);
+        // IMPORTANT update state, then update thing status in the super method, to avoid delays
+        super.handleMessage(msg);
     }
 
     /**
-     * Updates automation device state based on an Automation message received from the OWN network
+     * Updates automation device state based on an Automation message received from OWN network
      */
     private void updateAutomationState(Automation msg) {
         if (msg.isUp()) {
             updateStateInt(STATE_MOVING_UP);
             if (calibrating == CALIBRATION_ACTIVATED) {
                 calibrating = CALIBRATION_GOING_UP;
-                logger.debug("==OWN:AutomationHandler== && started going ALL UP...");
+                logger.debug("==OWN:AutomationHandler== & " + toWhere(channel)
+                        + " & ...CALIBRATING: started going ALL UP...");
             }
         } else if (msg.isDown()) {
             updateStateInt(STATE_MOVING_DOWN);
             if (calibrating == CALIBRATION_ACTIVATED) {
                 calibrating = CALIBRATION_GOING_DOWN;
-                logger.debug("==OWN:AutomationHandler== && started going ALL DOWN...");
+                logger.debug("==OWN:AutomationHandler== & " + toWhere(channel)
+                        + " & ...CALIBRATING: started going ALL DOWN...");
             }
         } else if (msg.isStop()) {
             long stoppedAt = System.currentTimeMillis();
             if (calibrating == CALIBRATION_GOING_DOWN && shutterRun == SHUTTER_RUN_UNDEFINED) {
                 shutterRun = (int) (stoppedAt - startedMovingAt);
-                logger.debug("==OWN:AutomationHandler== && reached DOWN ===> shutterRun={}", shutterRun);
+                logger.debug("==OWN:AutomationHandler== & " + toWhere(channel)
+                        + " & ...CALIBRATING: reached DOWN ===> shutterRun={}", shutterRun);
                 updateStateInt(STATE_STOPPED);
-                logger.debug("==OWN:AutomationHandler== && -- CALIBRATION COMPLETED--, now going to percent {}",
-                        positionRequested);
+                logger.debug("==OWN:AutomationHandler== & " + toWhere(channel)
+                        + " & ---CALIBRATION COMPLETED, now going to {}%", positionRequested);
                 handleShutterCommand(channel, new PercentType(positionRequested));
                 Configuration configuration = editConfiguration();
                 configuration.put(CONFIG_PROPERTY_SHUTTER_RUN, Integer.toString(shutterRun));
                 updateConfiguration(configuration);
+                logger.debug("==OWN:AutomationHandler== & " + toWhere(channel)
+                        + " & configuration updated: shutterRun = {}ms", shutterRun);
             } else if (calibrating == CALIBRATION_GOING_UP) {
                 updateStateInt(STATE_STOPPED);
-                logger.debug("==OWN:AutomationHandler== && reached UP, now sending DOWN command...", shutterRun);
+                logger.debug("==OWN:AutomationHandler==  & " + toWhere(channel)
+                        + " & ..CALIBRATING: reached UP, now sending DOWN command...", shutterRun);
                 calibrating = CALIBRATION_ACTIVATED;
-                gateway.send(Automation.requestMoveDown(toWhere(channel), automationType));
+                bridgeHandler.gateway.send(Automation.requestMoveDown(toWhere(channel), automationType));
             } else {
                 updateStateInt(STATE_STOPPED);
             }
@@ -287,15 +312,19 @@ public class OpenWebNetAutomationHandler extends OpenWebNetThingHandler {
     /** Updates internal state: state and positionEst */
     private void updateStateInt(int newState) {
         if (internalState == STATE_STOPPED) {
-            if (newState != STATE_STOPPED) { // move after stop
+            if (newState != STATE_STOPPED) { // moving after stop
                 startedMovingAt = System.currentTimeMillis();
-                logger.debug("==OWN:AutomationHandler== MOVING {} - startedMovingAt={}", newState, startedMovingAt);
+                logger.debug(
+                        "==OWN:AutomationHandler== # " + toWhere(channel) + " # MOVING {} - startedMovingAt={} - {}",
+                        newState, startedMovingAt, formatter.format(new Date(startedMovingAt)));
             }
         } else { // we were moving
             updatePosition();
-            if (newState != STATE_STOPPED) { // move after move, take new timestamp
+            if (newState != STATE_STOPPED) { // moving after moving, take new timestamp
                 startedMovingAt = System.currentTimeMillis();
-                logger.debug("==OWN:AutomationHandler== MOVING {} - startedMovingAt={}", newState, startedMovingAt);
+                logger.debug(
+                        "==OWN:AutomationHandler== # " + toWhere(channel) + " # MOVING {} - startedMovingAt={} - {}",
+                        newState, startedMovingAt, formatter.format(new Date(startedMovingAt)));
             }
             // cancel the schedule
             if (moveSchedule != null && !moveSchedule.isDone()) {
@@ -303,7 +332,9 @@ public class OpenWebNetAutomationHandler extends OpenWebNetThingHandler {
             }
         }
         internalState = newState;
-        logger.debug("==OWN:AutomationHandler== [[[ internalState={} positionEst={} - calibrating={} shutterRun={} ]]]",
+        logger.debug(
+                "==OWN:AutomationHandler== # " + toWhere(channel)
+                        + " # [[[ internalState={} positionEst={} - calibrating={} shutterRun={} ]]]",
                 internalState, positionEst, calibrating, shutterRun);
     }
 
@@ -314,18 +345,18 @@ public class OpenWebNetAutomationHandler extends OpenWebNetThingHandler {
     private void updatePosition() {
         int newPos = POSITION_UNKNOWN;
         if (shutterRun > 0) {// we have shutterRun defined, let's calculate new positionEst
-            long movementTime = System.currentTimeMillis() - startedMovingAt;
-            logger.trace("==OWN:AutomationHandler== positionEst={}", positionEst);
-            logger.trace("==OWN:AutomationHandler== runDelta={}", movementTime);
-            int movementSteps = Math.round((float) movementTime / shutterRun * POSITION_DOWN);
-            logger.debug("==OWN:AutomationHandler== movementSteps={} {}", movementSteps,
+            long movedTime = System.currentTimeMillis() - startedMovingAt;
+            logger.debug("==OWN:AutomationHandler== # " + toWhere(channel) + " # current positionEst={}", positionEst);
+            logger.debug("==OWN:AutomationHandler== # " + toWhere(channel) + " # movedTime={}", movedTime);
+            int movedSteps = Math.round((float) movedTime / shutterRun * POSITION_MAX_STEPS);
+            logger.debug("==OWN:AutomationHandler== # " + toWhere(channel) + " # movedSteps: {} {}", movedSteps,
                     (internalState == STATE_MOVING_DOWN) ? "DOWN(+)" : "UP(-)");
-            if (positionEst == POSITION_UNKNOWN && movementSteps >= POSITION_DOWN) { // we did a full run
+            if (positionEst == POSITION_UNKNOWN && movedSteps >= POSITION_MAX_STEPS) { // we did a full run
                 newPos = (internalState == STATE_MOVING_DOWN) ? POSITION_DOWN : POSITION_UP;
             } else if (positionEst != POSITION_UNKNOWN) {
-                newPos = positionEst + ((internalState == STATE_MOVING_DOWN) ? movementSteps : -movementSteps);
-                logger.trace("==OWN:AutomationHandler== {} {} {} = {}", positionEst,
-                        (internalState == STATE_MOVING_DOWN) ? "+" : "-", movementSteps, newPos);
+                newPos = positionEst + ((internalState == STATE_MOVING_DOWN) ? movedSteps : -movedSteps);
+                logger.debug("==OWN:AutomationHandler== # " + toWhere(channel) + " # {} {} {} = {}", positionEst,
+                        (internalState == STATE_MOVING_DOWN) ? "+" : "-", movedSteps, newPos);
                 if (newPos > POSITION_DOWN) {
                     newPos = POSITION_DOWN;
                 }
