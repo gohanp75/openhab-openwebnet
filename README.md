@@ -173,20 +173,20 @@ Devices can be also added manually from PaperUI. For each device it must be conf
 
 Devices support some of the following channels:
 
-| Channel Type ID        | Item Type     | Description                                                            | Read/Write |
-|------------------------|---------------|------------------------------------------------------------------------|:----------:|
-| switch                 | Switch        | To switch the device `ON` and `OFF`                                    |    R/W     |
-| brightness             | Dimmer        | To adjust the brightness value (Percent,`ON`, `OFF`)                   |    R/W     |
+| Channel Type ID        | Item Type     | Description                                                             | Read/Write |
+|------------------------|---------------|-------------------------------------------------------------------------|:----------:|
+| switch                 | Switch        | To switch the device `ON` and `OFF`                                     |    R/W     |
+| brightness             | Dimmer        | To adjust the brightness value (Percent,`ON`, `OFF`)                    |    R/W     |
 | shutter                | Rollershutter | To activate roller shutters (`UP`, `DOWN`, `STOP`, Percent - [SEE NOTE](#notes-on-shutter-position)) |    R/W     |
-| temperature            | Number        | The zone currently sensed temperature (°C)                             |     R      |
+| temperature            | Number        | The zone currently sensed temperature (°C)                              |     R      |
 | targetTemperature      | Number        | The zone target temperature (°C). It considers `setPoint` but also `activeMode` and `localMode`  |      R     |
 | thermoFunction         | String        | The zone set thermo function: `HEAT`, `COOL` or `GENERIC` (heating + cooling)     |      R     |
 | heatingCoolingMode [*] | String        | The zone mode: `heat`, `cool`, `heatcool`, `off` (same as `thermoFunction`+ `off`, useful for Google Home integration)    |     R      |
-| heating  [*]           | Switch        | ON if the zone heating valve is currently active (heating is ON)       |     R      |
-| cooling  [*]           | Switch        | ON if the zone cooling valve is currently active (cooling is ON)       |     R      |
+| heating  [*]           | Switch        | `ON` if the zone heating valve is currently active (heating is On)      |     R      |
+| cooling  [*]           | Switch        | `ON` if the zone cooling valve is currently active (cooling is On)      |     R      |
 | activeMode             | String        | The zone current active mode (Operation Mode): `AUTO`, `MANUAL`, `PROTECTION`, `OFF`. It considers `setMode` and `localMode` (with priority)     |      R     |
 | localMode              | String        | The zone current local mode, as set on the physical thermostat in the room: `-3/-2/-1/NORMAL/+1/+2/+3`, `PROTECTION`, or `OFF`  |      R     |
-| setpointTemperature    | Number        | The zone setpoint temperature °C, as set from Central Unit or openHAB  |     R/W    |
+| setpointTemperature    | Number        | The zone setpoint temperature (°C), as set from Central Unit or openHAB |     R/W    |
 | setMode                | String        | The zone set mode, as set from Central Unit or openHAB: `AUTO`, `MANUAL`, `PROTECTION`, `OFF`    |     R/W    |
 
 [*] = advanced channel: in PaperUI can be shown from  *Thing config > Channel list > Show More* button. Link to an item by clicking on the channel blue button.
@@ -206,47 +206,44 @@ It's possible to enter a value manually or set `shutterRun=AUTO` (default) to ca
 
 ### openwebnet.things:
 
-```
+```xtend
 Bridge openwebnet:bus_gateway:mybridge  [ host="192.168.1.35", passwd="abcde" ] {
-      bus_on_off_switch   myswitch         "Living room Light"      [ where="64#4#01" ]
-      bus_dimmer          mydimmer         "Living room Dimmer"     [ where="24" ]
-      bus_automation      myshutter        "Living room Shutter"    [ where="53", shutterRun="12000"]
-      bus_temp_sensor     exttempsensor    "External Sensor"        [ where="500"]
-      bus_thermostat      room1thermostat  "Living room Thermostat" [ where="1"]
+    bus_on_off_switch  myswitch       "Living room Light"       [ where="64#4#01" ]
+    bus_dimmer         mydimmer       "Living room Dimmer"      [ where="24" ]
+    bus_automation     myshutter      "Living room Shutter"     [ where="53", shutterRun="12000" ]
+    bus_thermostat     lrthermostat   "Living room Thermostat"  [ where="1" ]
+	bus_temp_sensor    exttempsensor  "External Sensor"         [ where="500" ]
 }
 ``` 
 
-```
+```xtend
 <TODO----- ZigBee Dongle configuration>
 Bridge openwebnet:dongle:mydongle2  [serialPort="kkkkkkk"] {
-      dimmer          myzigbeedimmer [ where="xxxxx"]
-      on_off_switch   myzigbeeswitch [ where="yyyyy"]
+    dimmer          myzigbeedimmer [ where="xxxxx"]
+    on_off_switch   myzigbeeswitch [ where="yyyyy"]
 }
 ```
 
 ### openwebnet.items:
 
-```
-Switch iBusLight  "Switch"  <light>  (gLivingRoom) ["Lighting"]   { channel="openwebnet:bus_on_off_switch:mybridge:myswitch:switch" }
-Dimmer iBusDimmer "Brightness [%.0f %%]" <DimmableLight> (gLivingRoom) ["Lighting"] { channel="openwebnet:bus_dimmer:mybridge:mydimmer:brightness" }
+```xtend
+Switch        LR_Bus_Light    "Switch"                 <light>          (gLivingRoom)             [ "Lighting" ]  { channel="openwebnet:bus_on_off_switch:mybridge:myswitch:switch" }
+Dimmer        LR_Bus_Dimmer   "Brightness [%.0f %%]"   <DimmableLight>  (gLivingRoom)             [ "Lighting" ]  { channel="openwebnet:bus_dimmer:mybridge:mydimmer:brightness" }
 /* For Dimmers, use category DimmableLight to have Off/On switch in addition to the Percent slider in PaperUI */
-Rollershutter iBusShutter "Shutter [%.0f %%]" <rollershutter> (gShutters, gLivingRoom)  { channel="openwebnet:bus_automation:mybridge:myshutter:shutter" }
-
-Number iExtTemp "Temperature [%.1f °C]" <temperature>  { channel="openwebnet:bus_temp_sensor:mybridge:exttempsensor:temperature" }
+Rollershutter LR_Bus_Shutter  "Shutter [%.0f %%]"      <rollershutter>  (gShutters, gLivingRoom)                  { channel="openwebnet:bus_automation:mybridge:myshutter:shutter" }
+Number        Ext_Temp        "Temperature [%.1f °C]"  <temperature>                                              { channel="openwebnet:bus_temp_sensor:mybridge:exttempsensor:temperature" }
 
 /* Thermostat Setup (Google Home/Alexa require thermostat items to be grouped together) */
-Group gRoom1Thermostat "Living room Thermostat" [ "Thermostat"]
-  Number iRoom1Temp "Temperature [%.1f °C]" <temperature> (gRoom1Thermostat) [ "CurrentTemperature" ]  { channel="openwebnet:bus_thermostat:mybridge:room1thermostat:temperature" }
-  Number iRoom1SetpointTemp "Set Temperature [%.1f °C]" <temperature> (gRoom1Thermostat) [ "TargetTemperature" ]   { channel="openwebnet:bus_thermostat:mybridge:room1thermostat:setpointTemperature" }
-  String iRoom1HeatingCoolingMode "HeatingCoolingMode Mode" (gRoom1Thermostat) [ "homekit:HeatingCoolingMode" ]  { channel="openwebnet:bus_thermostat:mybridge:room1thermostat:heatingCoolingMode" }
+Group  gLR_Thermostat  "Living room Thermostat"  [ "Thermostat" ]
+  Number  LR_Temp                "Temperature [%.1f °C]"      <temperature>  (gLR_Thermostat) [ "CurrentTemperature" ]          { channel="openwebnet:bus_thermostat:mybridge:lrthermostat:temperature" }
+  Number  LR_SetpointTemp        "Set Temperature [%.1f °C]"  <temperature>  (gLR_Thermostat) [ "TargetTemperature" ]           { channel="openwebnet:bus_thermostat:mybridge:lrthermostat:setpointTemperature" }
+  String  LR_HeatingCoolingMode  "HeatingCoolingMode"                        (gLR_Thermostat) [ "homekit:HeatingCoolingMode" ]  { channel="openwebnet:bus_thermostat:mybridge:lrthermostat:heatingCoolingMode" }
 ```
-
-
 
 ### openwebnet.sitemap
 
-```
-<example not available yet>
+```xtend
+<TODO----- example not available yet>
 ```
 
 ## Disclaimer
