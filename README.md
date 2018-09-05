@@ -107,7 +107,7 @@ Things discovery is supported using PaperUI by activating the discovery ("+") bu
 ### BUS/SCS Discovery
 
 - Gateway discovery using UPnP is *under development* and will be available only for IP gateways supporting UPnP
-- For the moment the OpenWebNet IP gateway should be added manually from PaperUI or in the .things file (see [Configuring BUS/SCS Gateway](#configuring-bus/scs-gateway) below)
+- For the moment the OpenWebNet IP gateway should be added manually from PaperUI or in the .things file (see [Configuring BUS/SCS Gateway](#configuring-bus-scs-gateway) below)
 - IP and passoword (if needed) must be configured
 - Once the gateway is added manually as a Thing, a second discovery request from Inbox will discover BUS devices
 - BUS/SCS Dimmers must be ON and dimmed (30-100%) at time of discovery, otherwise they will be discovered as simple On/Off switches
@@ -176,8 +176,8 @@ Devices support some of the following channels:
 | Channel Type ID        | Item Type     | Description                                                            | Read/Write |
 |------------------------|---------------|------------------------------------------------------------------------|:----------:|
 | switch                 | Switch        | To switch the device `ON` and `OFF`                                    |    R/W     |
-| brightness             | Dimmer        | To adjust the brightness value (Percent)                               |    R/W     |
-| shutter                | Rollershutter | To activate roller shutters (`UP`, `DOWN`, `STOP`, Percent - [SEE NOTE](#note-on-shutter-position) |    R/W     |
+| brightness             | Dimmer        | To adjust the brightness value (Percent,`ON`, `OFF`)                   |    R/W     |
+| shutter                | Rollershutter | To activate roller shutters (`UP`, `DOWN`, `STOP`, Percent - [SEE NOTE](#notes-on-shutter-position) |    R/W     |
 | temperature            | Number        | The zone currently sensed temperature (°C)                             |     R      |
 | targetTemperature      | Number        | The zone target temperature (°C). It considers `setPoint` but also `activeMode` and `localMode`  |      R     |
 | thermoFunction         | String        | The zone set thermo function: `HEAT`, `COOL` or `GENERIC` (heating + cooling)     |      R     |
@@ -189,15 +189,18 @@ Devices support some of the following channels:
 | setpointTemperature    | Number        | The zone setpoint temperature °C, as set from Central Unit or openHAB  |     R/W    |
 | setMode                | String        | The zone set mode, as set from Central Unit or openHAB: `AUTO`, `MANUAL`, `PROTECTION`, `OFF`    |     R/W    |
 
-[*] = advanced channel: in PaperUI can be shown from  *Thing config > Channel list > Show More* button. Link to an item by clicking on the channel blu button.
+[*] = advanced channel: in PaperUI can be shown from  *Thing config > Channel list > Show More* button. Link to an item by clicking on the channel blue button.
 
-### Note on Shutter position
-For Percent and position feedback to work correctly, the `shutterRun` Thing config parameter must be configured equal to the time (in ms) to go from full UP to full DOWN.
-Use `shutterRun=AUTO` (default) to calibrate the shutter automatically the first time a Percent command is sent to the shutter: a *UP >> DOWN >> Position%* cycle will be performed automatically to calibrate the shutter.
-If shutterRun is set manually and too higher than the actual runtime, no position estimation will be possibile, try to reduce shutterRun until you find the right value.
 
-Before adding/configuring roller shutter Things (or installing a binding update) it is suggested to have all roller shutters `UP`, otherwise the Percent command won’t work until the roller shutter is fully rolled up.
-Note that the shutter position is estimated based on UP/DOWN timing and therefore an error of ±2% is normal.
+### Notes on Shutter position
+For Percent commands and position feedback to work correctly, the `shutterRun` Thing config parameter must be configured equal to the time (in ms) to go from full UP to full DOWN.
+It's possible to enter a value manually or set `shutterRun=AUTO` (default) to calibrate shutterRun parameter automatically the first time a Percent command is sent to the shutter: a *UP >> DOWN >> Position%* cycle will be performed automatically.
+- if shutterRun is not set, or is set to AUTO but calibration has not been performed yet, then position estimation will remain `UNDEFINED`
+- if shutterRun is set manually and too higher than the actual runtime, then position estimation will remain `UNDEFINED`: try to reduce shutterRun until you find the right value
+- before adding/configuring roller shutter Things (or installing a binding update) it is suggested to have all roller shutters `UP`, otherwise the Percent command won’t work until the roller shutter is fully rolled up
+- if the gateways gets disconnected then the binding cannot know anymore where the shutter was: if `shutterRun` is defined (and correct), then just roll the shutter all Up / Down and its position will be estimated again
+- the shutter position is estimated based on UP/DOWN timing and therefore an error of ±2% is normal
+
 
 ## Full Example
 
@@ -226,6 +229,7 @@ Bridge openwebnet:dongle:mydongle2  [serialPort="kkkkkkk"] {
 ```
 Switch iBusLight  "Switch"  <light>  (gLivingRoom) ["Lighting"]   { channel="openwebnet:bus_on_off_switch:mybridge:myswitch:switch" }
 Dimmer iBusDimmer "Brightness [%.0f %%]" <DimmableLight> (gLivingRoom) ["Lighting"] { channel="openwebnet:bus_dimmer:mybridge:mydimmer:brightness" }
+/* For Dimmers, use category DimmableLight to have Off/On switch in addition to the Percent slider in PaperUI */
 Rollershutter iBusShutter "Shutter [%.0f %%]" <rollershutter> (gShutters, gLivingRoom)  { channel="openwebnet:bus_automation:mybridge:myshutter:shutter" }
 
 Number iExtTemp "Temperature [%.1f °C]" <temperature>  { channel="openwebnet:bus_temp_sensor:mybridge:exttempsensor:temperature" }
