@@ -25,8 +25,8 @@ Currently these gateways are supported by the binding:
 The following Things and OpenWebNet `WHOs` are supported:
 ### BUS/SCS
 
-| Category   | WHO   | Thing Type IDs                    | Discovery?          | Feedback from BUS?          | Description                                                                             | Status           |
-| ---------- | :---: | :-------------------------------: | :----------------: | :----------------: | --------------------------------------------------------------------------------------- | ---------------- |
+| Category   | WHO   | Thing Type IDs                    | Discovery?          | Feedback from BUS?          | Description                                                 | Status           |
+| ---------- | :---: | :-------------------------------: | :----------------: | :----------------: | ----------------------------------------------------------- | ---------------- |
 | Gateway    | `13`  | `bus_gateway`                     | *work in progress*                | n/a  | Any IP gateway supporting OpenWebNet protocol should work (e.g. F454/MyHOMEServer1/MH202/F455/MH200N,...) | Successfully tested: F454, MyHOMEServer1, MyHOME_Screen10, F455, F453AV, MH202. Some connection stability issues/gateway resets reported with MH202  |
 | Lightning | `1`   | `bus_on_off_switch`, `bus_dimmer` | Yes                | Yes                | BUS switches and dimmers                                                                 | Successfully tested: F411/2, F411/4, F411U2, F422, F429. Some discovery issues reported with F429 (DALI Dimmers)  |
 | Automation | `2`   | `bus_automation`                | Yes | Yes                  | BUS roller shutters, with position feedback and auto-calibration via a *UP >> DOWN >> Position%* cycle                                                                                       | Successfully tested: LN4672M2  |
