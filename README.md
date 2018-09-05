@@ -177,7 +177,7 @@ Devices support some of the following channels:
 |------------------------|---------------|------------------------------------------------------------------------|:----------:|
 | switch                 | Switch        | To switch the device `ON` and `OFF`                                    |    R/W     |
 | brightness             | Dimmer        | To adjust the brightness value (Percent,`ON`, `OFF`)                   |    R/W     |
-| shutter                | Rollershutter | To activate roller shutters (`UP`, `DOWN`, `STOP`, Percent - [SEE NOTE](#notes-on-shutter-position) |    R/W     |
+| shutter                | Rollershutter | To activate roller shutters (`UP`, `DOWN`, `STOP`, Percent - [SEE NOTE](#notes-on-shutter-position)) |    R/W     |
 | temperature            | Number        | The zone currently sensed temperature (°C)                             |     R      |
 | targetTemperature      | Number        | The zone target temperature (°C). It considers `setPoint` but also `activeMode` and `localMode`  |      R     |
 | thermoFunction         | String        | The zone set thermo function: `HEAT`, `COOL` or `GENERIC` (heating + cooling)     |      R     |
